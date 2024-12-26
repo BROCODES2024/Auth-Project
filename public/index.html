@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+    <script>
+      //we make the function async and await the axios cause it may take time reaching the backend also since axios returns us a promise we need to await it
+      async function signup() {
+        const username = document.getElementById("signup-username").value;
+        const password = document.getElementById("signup-password").value;
+
+        const response = await axios.post("http://localhost:3000/signup", {
+          username: username,
+          password: password,
+        });
+        alert("Signed up successfully");
+      }
+      async function signin() {
+        const username = document.getElementById("signin-username").value;
+        const password = document.getElementById("signin-password").value;
+
+        try {
+          const response = await axios.post("http://localhost:3000/signin", {
+            username: username,
+            password: password,
+          });
+
+          // Store token if the response is successful
+          localStorage.setItem("token", response.data.token);
+          alert("Signed in successfully");
+
+          // Fetch and display user information
+          await getUserInformation();
+        } catch (error) {
+          if (error.response && error.response.status === 401) {
+            alert("Incorrect Credentials!");
+          } else {
+            alert("An error occurred during sign-in.");
+          }
+        }
+      }
+      async function logout() {
+        localStorage.removeItem("token");
+      }
+      async function getUserInformation() {
+        const token = localStorage.getItem("token");
+
+        if (token) {
+          try {
+            const response = await axios.get("http://localhost:3000/me", {
+              headers: {
+                Authorization: `Bearer ${token}`, // Add Bearer prefix
+              },
+            });
+
+            // Update UI with user information
+            document.getElementById(
+              "information"
+            ).innerHTML = `Username: ${response.data.username}`;
+          } catch (error) {
+            alert("Failed to fetch user information.");
+            console.error(error);
+          }
+        } else {
+          alert("You are not signed in.");
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div>
+      Signup
+      <input
+        id="signup-username"
+        type="text"
+        name="username"
+        placeholder="Username"
+      />
+      <input
+        id="signup-password"
+        type="password"
+        name="password"
+        placeholder="Password"
+      />
+      <button onclick="signup()">Submit</button>
+    </div>
+    <div>
+      Signin
+      <input
+        id="signin-username"
+        type="text"
+        name="username"
+        placeholder="Username"
+      />
+      <input
+        id="signin-password"
+        type="password"
+        name="password"
+        placeholder="Password"
+      />
+      <button onclick="signin()">Submit</button>
+    </div>
+    <div>
+      User information:
+      <div id="information"></div>
+    </div>
+    <div>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </body>
+</html>
